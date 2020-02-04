@@ -22,7 +22,6 @@ class App extends React.Component {
       description: "",
       error: false
     };
-    this.getWeather();
     this.weatherIcon = {
       Thunderstorm: "wi-thunderstorm",
       Drizzle: "wi-sleet",
@@ -34,26 +33,35 @@ class App extends React.Component {
     };
   }
 
-  getWeather = async () => {
-    const api_call = await fetch(
-      `http://api.openweathermap.org/data/2.5/weather?q=London,uk&appid=${API_KEY}`
-    );
+  getWeather = async e => {
+    e.preventDefault();
 
-    const response = await api_call.json();
+    const city = e.target.elements.city.value;
+    const country = e.target.elements.country.value;
 
-    console.log(response);
+    if (city && country) {
+      const api_call = await fetch(
+        `http://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${API_KEY}`
+      );
 
-    this.setState({
-      city: response.name,
-      country: response.sys.country,
-      celsius: this.calCelsius(response.main.temp),
-      temp_min: this.calCelsius(response.main.temp_min),
-      temp_max: this.calCelsius(response.main.temp_max),
-      description: response.weather[0].description,
-      icon: this.weatherIcon.Thunderstorm
-    });
+      const response = await api_call.json();
 
-    this.get_weatherIcon(this.weatherIcon, response.weather[0].id);
+      console.log(response);
+
+      this.setState({
+        city: `${response.name}, ${response.sys.country}`,
+        celsius: this.calCelsius(response.main.temp),
+        temp_min: this.calCelsius(response.main.temp_min),
+        temp_max: this.calCelsius(response.main.temp_max),
+        description: response.weather[0].description,
+        icon: this.weatherIcon.Thunderstorm,
+        error: false
+      });
+
+      this.get_weatherIcon(this.weatherIcon, response.weather[0].id);
+    } else {
+      this.setState({ error: true });
+    }
   };
 
   calCelsius(temp) {
@@ -91,7 +99,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <Form />
+        <Form loadweather={this.getWeather} error={this.state.error} />
         <Weather
           city={this.state.city}
           country={this.state.country}
